@@ -2,7 +2,7 @@
 import "./App.css";
 
 //React
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 //components
 import StartScreen from "./components/StartScreen";
@@ -34,7 +34,7 @@ function App() {
   const [guesses, setGuesses] = useState(guessesQty);
   const [score, setScore] = useState(0);
 
-  const pickWordAndCategory = () => {
+  const pickWordAndCategory = useCallback(() => {
     //pick a random category
     const categories = Object.keys(words);
     const category =
@@ -49,10 +49,13 @@ function App() {
     console.log(word);
 
     return { word, category };
-  };
+  }, [words]);
 
   //start the secret word game
-  function startGame() {
+  const startGame = useCallback(() => {
+    //clear all letters
+    clearLetterState();
+
     //pick word and pick game
     const { word, category } = pickWordAndCategory();
 
@@ -70,7 +73,7 @@ function App() {
     setLetters(wordLetters);
 
     setGameStage(stages[1].name);
-  }
+  }, [pickWordAndCategory]);
 
   //process the letter input
   function verifyLetter(letter) {
@@ -113,6 +116,20 @@ function App() {
       setGameStage(stages[2].name);
     }
   }, [guesses]);
+
+  //check win condition
+  useEffect(() => {
+    const uniqueLetters = [...new Set(letters)];
+
+    //win condition
+    if (guessdLetters.length === uniqueLetters.length) {
+      //add score
+      setScore((actualSocore) => (actualSocore += 100));
+
+      //restart game
+      startGame();
+    }
+  }, [guessdLetters, letters, startGame]);
 
   //restarts the game
   function retry() {
